@@ -6,61 +6,110 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.anjon.model.ToDoItem;
 import com.anjon.model.User;
+
+import java.util.List;
 
 /**
  * Created by anjon on 5/11/2016.
  */
 public class DatabaseManager extends SQLiteOpenHelper {
-    static final String DB_Name = "MobileAppDb";
-    public static final int DbVersion = 11;
+    private static final String DB_Name = "MobileAppDb";
+    private static final int DbVersion = 11;
 
-    public static final String UserTable = "Users";
-    public static final String Name = "Name";
-    public static final String Email = "Email";
-    public static final String Phone = "Phone";
-    public static final String Password = "Password";
-    public static final String Token = "Token";
-    public static final String UserId = "UserId";
+    //region Users table column names
+    private static final String UserTable = "Users";
+    private static final String Name = "Name";
+    private static final String Email = "Email";
+    private static final String Phone = "Phone";
+    private static final String Password = "Password";
+    private static final String Token = "Token";
+    private static final String UserId = "UserId";
+    //endregion
 
-    public DatabaseManager(Context context) {
+    //region ToDoItems table column names
+    private static final String ToDoItemTable = "ToDoItems";
+    private static final String ToDoItemId = "Id";
+    private static final String Title = "Title";
+    private static final String DueDateTime = "DueDateTime";
+    //endregion
+
+    protected DatabaseManager(Context context) {
         super(context, DB_Name, null, DbVersion);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
         try {
-            String UserTableQuery = "CREATE TABLE IF NOT EXISTS " + UserTable + " ("
-                    + UserId + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
-                    + Name + " varchar(50) not null, "
-                    + Email + " varchar(50) not null, "
-                    + Phone + " varchar(50) not null, "
-                    + Password + " varchar(50) not null"
-                    + Token + " varchar(50) not null"
-                    + " );";
-            db.execSQL(UserTableQuery);
+            StringBuilder tablesQuery = new StringBuilder();
+
+            //region Users table schema
+            tablesQuery.append("CREATE TABLE IF NOT EXISTS ");
+            tablesQuery.append(UserTable);
+            tablesQuery.append(" (");
+            tablesQuery.append(UserId);
+            tablesQuery.append(" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, ");
+            tablesQuery.append(Name);
+            tablesQuery.append(" varchar(50) not null, ");
+            tablesQuery.append(Email);
+            tablesQuery.append(" varchar(50) not null, ");
+            tablesQuery.append(Phone);
+            tablesQuery.append(" varchar(50) not null, ");
+            tablesQuery.append(Password);
+            tablesQuery.append(" varchar(50) not null, ");
+            tablesQuery.append(Token);
+            tablesQuery.append(" varchar(50) not null");
+            tablesQuery.append(" );");
+            //endregion
+
+            //region ToDoItems table schema
+            tablesQuery.append("CREATE TABLE IF NOT EXISTS ");
+            tablesQuery.append(ToDoItemTable);
+            tablesQuery.append(" (");
+            tablesQuery.append(ToDoItemId);
+            tablesQuery.append(" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, ");
+            tablesQuery.append(Title);
+            tablesQuery.append(" varchar(50) not null, ");
+            tablesQuery.append(DueDateTime);
+            tablesQuery.append(" varchar(50) not null");
+            tablesQuery.append(" );");
+            //endregion
+            db.execSQL(tablesQuery.toString());
         } catch (Exception e) {
 
         }
     }
 
-    public void InsertUser(User user) {
+    //region Generic DB operations
+    private void Insert(String tableName, ContentValues values) {
         SQLiteDatabase db = this.getWritableDatabase();
+        db.insert(tableName, null, values);
+        db.close();
+    }
+    //endregion
 
+    //region User DB operations
+    protected void InsertUser(User user) {
         ContentValues values = new ContentValues();
         values.put(Name, user.getName());
         values.put(Email, user.getEmail());
         values.put(Phone, user.getPhone());
         values.put(Password, user.getPassword());
         values.put(Token, user.getToken());
-
-        db.insert(UserTable, null, values);
-        db.close();
+        Insert(UserTable, values);
     }
 
-    public User GetUserByEmail(String email) {
+    protected User GetUserByEmail(String email) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("select * from " + UserTable + " where " + Email + " = " + email, null);
+        StringBuilder query = new StringBuilder();
+        query.append("select * from ");
+        query.append(UserTable);
+        query.append(" where ");
+        query.append(Email);
+        query.append(" = ");
+        query.append(email);
+        Cursor cursor = db.rawQuery(query.toString(), null);
         User user = null;
         if (cursor.getCount() > 0) {
             if (cursor.moveToFirst()) {
@@ -81,9 +130,16 @@ public class DatabaseManager extends SQLiteOpenHelper {
         return user;
     }
 
-    public User GetUserByToken(String token) {
+    protected User GetUserByToken(String token) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("select * from " + UserTable + " where " + Token + " = " + token, null);
+        StringBuilder query = new StringBuilder();
+        query.append("select * from ");
+        query.append(UserTable);
+        query.append(" where ");
+        query.append(Token);
+        query.append(" = ");
+        query.append(token);
+        Cursor cursor = db.rawQuery(query.toString(), null);
         User user = null;
         if (cursor.getCount() > 0) {
             if (cursor.moveToFirst()) {
@@ -103,6 +159,37 @@ public class DatabaseManager extends SQLiteOpenHelper {
         db.close();
         return user;
     }
+    //endregion
+
+    //region ToDoItem DB operation
+    protected void InsertToDoItem(ToDoItem item) {
+        ContentValues values = new ContentValues();
+        values.put(Title, item.getTitle());
+        values.put(DueDateTime, item.getDueDateTime());
+        Insert(ToDoItemTable, values);
+    }
+
+    protected List<ToDoItem> GetAllToDoItems() {
+        List<ToDoItem> list = null;
+        SQLiteDatabase db = this.getReadableDatabase();
+        StringBuilder query = new StringBuilder();
+        query.append("select * from ");
+        query.append(ToDoItemTable);
+        Cursor cursor = db.rawQuery(query.toString(), null);
+        if (cursor.getCount() > 0) {
+            while (cursor.moveToNext()) {
+                ToDoItem item = new ToDoItem();
+                item.setId(cursor.getLong(cursor.getColumnIndex(ToDoItemId)));
+                item.setTitle(cursor.getString(cursor.getColumnIndex(Title)));
+                item.setDueDateTime(cursor.getString(cursor.getColumnIndex(DueDateTime)));
+                list.add(item);
+            }
+        }
+        cursor.close();
+        db.close();
+        return list;
+    }
+    //endregion
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {

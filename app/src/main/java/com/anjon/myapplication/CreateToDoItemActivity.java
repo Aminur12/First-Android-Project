@@ -45,6 +45,8 @@ public class CreateToDoItemActivity extends AppCompatActivity implements View.On
                     dateTimeString.append(timePicker.getCurrentHour());
                     dateTimeString.append(":");
                     dateTimeString.append(timePicker.getCurrentMinute());
+                    TextView tvDateTime=(TextView) findViewById(R.id.tv_date_time);
+                    tvDateTime.setText(dateTimeString);
                     alertDialog.dismiss();
                 }
             });

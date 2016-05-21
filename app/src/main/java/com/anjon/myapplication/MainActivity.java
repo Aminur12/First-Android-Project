@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.anjon.manager.DatabaseManager;
+import com.anjon.manager.UserManager;
 import com.anjon.model.User;
 
 /**
@@ -41,13 +42,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
             boolean isValidEmail = Patterns.EMAIL_ADDRESS.matcher(email).matches();
             boolean isValidPhone = Patterns.PHONE.matcher(phone).matches();
             if (isValidPhone && isValidEmail && password.length() >= 6 && password.equals(confirmPassword)) {
-                DatabaseManager databaseManager=new DatabaseManager(this);
+                UserManager userManager=new UserManager(this);
                 User user=new User();
                 user.setName(name);
                 user.setEmail(email);
                 user.setPhone(phone);
                 user.setPassword(password);
-                databaseManager.InsertUser(user);
+                userManager.InsertUser(user);
                 Bundle bundle = new Bundle();
                 /*bundle.putString("name", name);*/
                 bundle.putString("email", email);

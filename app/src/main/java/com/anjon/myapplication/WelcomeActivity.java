@@ -9,6 +9,7 @@ import android.util.Log;
 import android.widget.TextView;
 
 import com.anjon.manager.DatabaseManager;
+import com.anjon.manager.UserManager;
 import com.anjon.model.User;
 
 /**
@@ -27,8 +28,8 @@ public class WelcomeActivity extends Activity {
             Bundle bundle = intent.getExtras();
             if (bundle != null) {
                 if (bundle.containsKey("email")) {
-                    DatabaseManager databaseManager = new DatabaseManager(this);
-                    User user = databaseManager.GetUserByEmail(bundle.getString("email"));
+                    UserManager userManager=new UserManager(this);
+                    User user = userManager.GetUserByEmail(bundle.getString("email"));
                     if (user != null) {
                         if (!user.getName().isEmpty()) {
                             TextView tvName = (TextView) findViewById(R.id.text_name);
